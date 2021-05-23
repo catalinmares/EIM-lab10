@@ -1,9 +1,14 @@
 package ro.pub.cs.systems.eim.lab10.googlemapslocationupdate.view;
 
+import android.Manifest;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
+import android.graphics.Color;
 import android.location.Location;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -61,7 +66,8 @@ public class GoogleMapsActivity extends AppCompatActivity implements GoogleApiCl
         navigateToLocation(location.getLatitude(), location.getLongitude());
     }
 
-    private NavigateToLocationButtonClickListener navigateToLocationButtonClickListener = new NavigateToLocationButtonClickListener();
+    private final NavigateToLocationButtonClickListener navigateToLocationButtonClickListener = new NavigateToLocationButtonClickListener();
+
     private class NavigateToLocationButtonClickListener implements Button.OnClickListener {
 
         @Override
@@ -70,8 +76,7 @@ public class GoogleMapsActivity extends AppCompatActivity implements GoogleApiCl
             String latitudeContent = latitudeEditText.getText().toString();
             String longitudeContent = longitudeEditText.getText().toString();
 
-            if (latitudeContent == null || latitudeContent.isEmpty()
-                    || longitudeContent == null || longitudeContent.isEmpty()) {
+            if (latitudeContent.isEmpty() || longitudeContent.isEmpty()) {
                 Toast.makeText(getApplicationContext(), "GPS coordinates should be filled!", Toast.LENGTH_SHORT).show();
                 return;
             }
@@ -85,7 +90,8 @@ public class GoogleMapsActivity extends AppCompatActivity implements GoogleApiCl
 
     }
 
-    private LocationUpdatesStatusButtonClickListener locationUpdatesStatusButtonClickListener = new LocationUpdatesStatusButtonClickListener();
+    private final LocationUpdatesStatusButtonClickListener locationUpdatesStatusButtonClickListener = new LocationUpdatesStatusButtonClickListener();
+
     private class LocationUpdatesStatusButtonClickListener implements Button.OnClickListener {
 
         @Override
@@ -101,7 +107,8 @@ public class GoogleMapsActivity extends AppCompatActivity implements GoogleApiCl
 
     }
 
-    private MapTypeSpinnerListener mapTypeSpinnerListener = new MapTypeSpinnerListener();
+    private final MapTypeSpinnerListener mapTypeSpinnerListener = new MapTypeSpinnerListener();
+
     private class MapTypeSpinnerListener implements AdapterView.OnItemSelectedListener {
 
         @Override
@@ -126,7 +133,8 @@ public class GoogleMapsActivity extends AppCompatActivity implements GoogleApiCl
         }
 
         @Override
-        public void onNothingSelected(AdapterView<?> adapterView) { }
+        public void onNothingSelected(AdapterView<?> adapterView) {
+        }
     }
 
     private static final int MY_PERMISSIONS_REQUEST_READ_FINE_LOCATION = 100;
@@ -137,15 +145,15 @@ public class GoogleMapsActivity extends AppCompatActivity implements GoogleApiCl
         setContentView(R.layout.activity_google_maps);
         Log.i(Constants.TAG, "onCreate() callback method was invoked");
 
-        latitudeEditText = (EditText)findViewById(R.id.latitude_edit_text);
-        longitudeEditText = (EditText)findViewById(R.id.longitude_edit_text);
-        navigateToLocationButton = (Button)findViewById(R.id.navigate_to_location_button);
+        latitudeEditText = (EditText) findViewById(R.id.latitude_edit_text);
+        longitudeEditText = (EditText) findViewById(R.id.longitude_edit_text);
+        navigateToLocationButton = (Button) findViewById(R.id.navigate_to_location_button);
         navigateToLocationButton.setOnClickListener(navigateToLocationButtonClickListener);
 
-        locationUpdatesStatusButton = (Button)findViewById(R.id.location_updates_status_button);
+        locationUpdatesStatusButton = (Button) findViewById(R.id.location_updates_status_button);
         locationUpdatesStatusButton.setOnClickListener(locationUpdatesStatusButtonClickListener);
 
-        mapTypeSpinner = (Spinner)findViewById(R.id.map_type_spinner);
+        mapTypeSpinner = (Spinner) findViewById(R.id.map_type_spinner);
         mapTypeSpinner.setOnItemSelectedListener(mapTypeSpinnerListener);
 
         googleApiClient = new GoogleApiClient.Builder(this)
@@ -169,7 +177,7 @@ public class GoogleMapsActivity extends AppCompatActivity implements GoogleApiCl
             ActivityCompat.requestPermissions(
                     this, // Activity
                     new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
-                    MY_PERMISSIONS_REQUEST_READ_FINE_LOCATION );
+                    MY_PERMISSIONS_REQUEST_READ_FINE_LOCATION);
         }
 
     }
@@ -182,12 +190,7 @@ public class GoogleMapsActivity extends AppCompatActivity implements GoogleApiCl
             googleApiClient.connect();
         }
         if (googleMap == null) {
-            ((MapFragment)getFragmentManager().findFragmentById(R.id.google_map)).getMapAsync(new OnMapReadyCallback() {
-                @Override
-                public void onMapReady(GoogleMap readygoogleMap) {
-                    googleMap = readygoogleMap;
-                }
-            });
+            ((MapFragment) getFragmentManager().findFragmentById(R.id.google_map)).getMapAsync(readygoogleMap -> googleMap = readygoogleMap);
         }
 
         if (googleApiClient != null && googleApiClient.isConnected() && locationUpdatesStatus) {
@@ -248,7 +251,7 @@ public class GoogleMapsActivity extends AppCompatActivity implements GoogleApiCl
             if (locationUpdatesStatus) {
                 startLocationUpdates();
             }
-        } catch(SecurityException securityException) {
+        } catch (SecurityException securityException) {
             Log.e(Constants.TAG, "An exception has occurred: " + securityException.getMessage());
             if (Constants.DEBUG) {
                 securityException.printStackTrace();
@@ -262,33 +265,50 @@ public class GoogleMapsActivity extends AppCompatActivity implements GoogleApiCl
     }
 
     @Override
-    public void onConnectionFailed(ConnectionResult connectionResult) {
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
         Log.i(Constants.TAG, "onConnectionFailed() callback method has been invoked");
     }
 
     private void startLocationUpdates() {
+        try {
+            LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, locationRequest, this);
 
-        // TODO exercise 7a
-        // invoke the requestLocationUpdates() method from FusedLocationProviderApi class
-        // enable the locationUpdatesStatus
-        // enable the current location on Google Map
-        // update the locationUpdatesStatusButton text & color
-        // navigate to current position (lastLocation), if available
-        // disable the latitudeEditText, longitudeEditText, navigateToLocationButton widgets
-        // the whole routine should be put in a try ... catch block for SecurityExeption
+            locationUpdatesStatus = true;
+            googleMap.setMyLocationEnabled(true);
 
+            locationUpdatesStatusButton.setText(getResources().getString(R.string.stop_location_updates));
+            locationUpdatesStatusButton.setBackground(ResourcesCompat.getDrawable(getResources(), R.color.colorRed, null));
+
+            if (lastLocation != null) {
+                navigateToLocation(lastLocation);
+            }
+
+            latitudeEditText.setEnabled(false);
+            longitudeEditText.setEnabled(false);
+            navigateToLocationButton.setEnabled(false);
+        } catch (SecurityException e) {
+            Log.e(Constants.TAG, "startLocationUpdates(): " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     private void stopLocationUpdates() {
+        try {
+            LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, this);
 
-        // TODO exercise 7b
-        // invoke the removeLocationUpdates() method from FusedLocationProviderApi class
-        // disable the locationUpdatesStatus
-        // disable the current location on Google Map
-        // update the locationUpdatesStatusButton text & color
-        // enable the latitudeEditText, longitudeEditText, navigateToLocationButton widgets	and reset their content
-        // the whole routine should be put in a try ... catch block for SecurityExeption
+            locationUpdatesStatus = false;
+            googleMap.setMyLocationEnabled(false);
 
+            locationUpdatesStatusButton.setText(getResources().getString(R.string.start_location_updates));
+            locationUpdatesStatusButton.setBackground(ResourcesCompat.getDrawable(getResources(), R.color.colorGreen, null));
+
+            latitudeEditText.setEnabled(true);
+            longitudeEditText.setEnabled(true);
+            navigateToLocationButton.setEnabled(true);
+        } catch (SecurityException e) {
+            Log.e(Constants.TAG, "stopLocationUpdates(): " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -297,5 +317,4 @@ public class GoogleMapsActivity extends AppCompatActivity implements GoogleApiCl
         lastLocation = location;
         navigateToLocation(lastLocation);
     }
-
 }

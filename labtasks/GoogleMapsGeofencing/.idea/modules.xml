@@ -3,8 +3,8 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/GoogleMapsGeofencing.iml" filepath="$PROJECT_DIR$/GoogleMapsGeofencing.iml" />
-      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
-      <module fileurl="file://$PROJECT_DIR$/gson-2.8.0/gson-2.8.0.iml" filepath="$PROJECT_DIR$/gson-2.8.0/gson-2.8.0.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/GoogleMapsGeofencing.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/GoogleMapsGeofencing.app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/gson-2.8.0/GoogleMapsGeofencing.gson-2.8.0.iml" filepath="$PROJECT_DIR$/.idea/modules/gson-2.8.0/GoogleMapsGeofencing.gson-2.8.0.iml" />
     </modules>
   </component>
 </project>

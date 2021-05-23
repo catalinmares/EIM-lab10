@@ -12,7 +12,7 @@ public class Place {
     public Place() {
         latitude = 0.0;
         longitude = 0.0;
-        name = new String();
+        name = "";
         markerType = BitmapDescriptorFactory.HUE_RED;
     }
 

@@ -16,7 +16,7 @@ import ro.pub.cs.systems.eim.lab10.googlemapsgeofencing.view.GoogleMapsActivity;
 public class Utilities {
 
     public static String generateGeofenceIdentifier(int length) {
-        StringBuffer result = new StringBuffer("");
+        StringBuilder result = new StringBuilder();
 
         Random random = new Random();
         for (int index = 0; index < length; index++) {
@@ -135,7 +135,7 @@ public class Utilities {
         sharedPreferencesEditor.putString(Constants.GEOFENCE_LATITUDE, geofenceLatitude);
         sharedPreferencesEditor.putString(Constants.GEOFENCE_LONGITUDE, geofenceLongitude);
         sharedPreferencesEditor.putString(Constants.GEOFENCE_RADIUS, geofenceRadius);
-        sharedPreferencesEditor.commit();
+        sharedPreferencesEditor.apply();
     }
 
 

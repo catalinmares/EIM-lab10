@@ -1,5 +1,6 @@
 package ro.pub.cs.systems.eim.lab10.googlemapplaces.view;
 
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -16,9 +17,10 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
-import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,7 +51,6 @@ public class GoogleMapsActivity extends AppCompatActivity implements GoogleApiCl
     private Button addPlaceButton = null;
     private Button clearPlacesButton = null;
 
-
     private void navigateToLocation(double latitude, double longitude) {
         latitudeEditText.setText(String.valueOf(latitude));
         longitudeEditText.setText(String.valueOf(longitude));
@@ -60,7 +61,7 @@ public class GoogleMapsActivity extends AppCompatActivity implements GoogleApiCl
         googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
     }
 
-    private NavigateToLocationButtonListener navigateToLocationButtonListener = new NavigateToLocationButtonListener();
+    private final NavigateToLocationButtonListener navigateToLocationButtonListener = new NavigateToLocationButtonListener();
     private class NavigateToLocationButtonListener implements Button.OnClickListener {
 
         @Override
@@ -68,9 +69,8 @@ public class GoogleMapsActivity extends AppCompatActivity implements GoogleApiCl
             String latitudeContent = latitudeEditText.getText().toString();
             String longitudeContent = longitudeEditText.getText().toString();
 
-            if (latitudeContent == null || latitudeContent.isEmpty() ||
-                    longitudeContent == null || longitudeContent.isEmpty()) {
-                Toast.makeText(getApplicationContext(), "GPS Coordinates should be filled!", Toast.LENGTH_SHORT).show();
+            if (latitudeContent.isEmpty() || longitudeContent.isEmpty()) {
+                Toast.makeText(getApplicationContext(), "GPS Coordinates should be filled!", Toast.LENGTH_LONG).show();
                 return;
             }
 
@@ -80,7 +80,7 @@ public class GoogleMapsActivity extends AppCompatActivity implements GoogleApiCl
         }
     }
 
-    private PlacesSpinnerListener placesSpinnerListener = new PlacesSpinnerListener();
+    private final PlacesSpinnerListener placesSpinnerListener = new PlacesSpinnerListener();
     private class PlacesSpinnerListener implements AdapterView.OnItemSelectedListener {
 
         @Override
@@ -98,36 +98,61 @@ public class GoogleMapsActivity extends AppCompatActivity implements GoogleApiCl
         public void onNothingSelected(AdapterView<?> adapterView) { }
     }
 
-    private AddPlaceButtonListener addPlaceButtonListener = new AddPlaceButtonListener();
+    private final AddPlaceButtonListener addPlaceButtonListener = new AddPlaceButtonListener();
     private class AddPlaceButtonListener implements Button.OnClickListener {
 
         @Override
         public void onClick(View view) {
+            String latitudeContent = latitudeEditText.getText().toString();
+            String longitudeContent = longitudeEditText.getText().toString();
+            String nameContent = nameEditText.getText().toString();
 
-            // TODO exercise 6a
-            // check whether latitude, longitude and name are filled, otherwise long an error
-            // navigate to the requested position (latitude, longitude)
-            // create a MarkerOptions object with position, title and icon taken from the corresponding widgets
-            // hint: for icon, use BitmapDescriptorFactory.defaultMarker() method
-            // add the MarkerOptions to the Google Map
-            // add the Place information to the places list
-            // notify the placesAdapter that the data set was changed
+            if (latitudeContent.isEmpty() || longitudeContent.isEmpty() || nameContent.isEmpty()) {
+                Toast.makeText(getApplicationContext(), "Place Coordinates and Name should be filled!", Toast.LENGTH_LONG).show();
+                return;
+            }
 
+            double latitudeValue = Double.parseDouble(latitudeContent);
+            double longitudeValue = Double.parseDouble(longitudeContent);
+            navigateToLocation(latitudeValue, longitudeValue);
+
+            MarkerOptions marker = new MarkerOptions()
+                    .position(new LatLng(
+                            latitudeValue,
+                            longitudeValue
+                    ))
+                    .title(nameContent);
+
+            float markerType = Utilities.getDefaultMarker(markerTypeSpinner.getSelectedItemPosition());
+
+            marker.icon(BitmapDescriptorFactory.defaultMarker(markerType));
+
+            googleMap.addMarker(marker);
+
+            places.add(new Place(
+                    latitudeValue,
+                    longitudeValue,
+                    nameContent,
+                    markerType
+            ));
+
+            placesAdapter.notifyDataSetChanged();
         }
     }
 
-    private ClearPlacesButtonListener clearPlacesButtonListener = new ClearPlacesButtonListener();
+    private final ClearPlacesButtonListener clearPlacesButtonListener = new ClearPlacesButtonListener();
     private class ClearPlacesButtonListener implements Button.OnClickListener {
 
         @Override
         public void onClick(View view) {
+            if (places.isEmpty()) {
+                Toast.makeText(getApplicationContext(), "There are no places available!", Toast.LENGTH_LONG).show();
+                return;
+            }
 
-            // TODO exercise 6b
-            // check whether there are markers on the Google Map, otherwise log an error
-            // clear the Google Map
-            // clear the places List
-            // notify the placesAdapter that the data set was changed
-
+            googleMap.clear();
+            places.clear();
+            placesAdapter.notifyDataSetChanged();
         }
     }
 
@@ -138,25 +163,25 @@ public class GoogleMapsActivity extends AppCompatActivity implements GoogleApiCl
 
         Log.i(Constants.TAG, "onCreate() callback method was invoked");
 
-        latitudeEditText = (EditText)findViewById(R.id.latitude_edit_text);
-        longitudeEditText = (EditText)findViewById(R.id.longitude_edit_text);
-        navigateToLocationButton = (Button)findViewById(R.id.navigate_to_location_button);
+        latitudeEditText = (EditText) findViewById(R.id.latitude_edit_text);
+        longitudeEditText = (EditText) findViewById(R.id.longitude_edit_text);
+        navigateToLocationButton = (Button) findViewById(R.id.navigate_to_location_button);
         navigateToLocationButton.setOnClickListener(navigateToLocationButtonListener);
 
-        nameEditText = (EditText)findViewById(R.id.name_edit_text);
+        nameEditText = (EditText) findViewById(R.id.name_edit_text);
 
-        markerTypeSpinner = (Spinner)findViewById(R.id.marker_type_spinner);
+        markerTypeSpinner = (Spinner) findViewById(R.id.marker_type_spinner);
 
-        placesSpinner = (Spinner)findViewById(R.id.places_spinner);
+        placesSpinner = (Spinner) findViewById(R.id.places_spinner);
         places = new ArrayList<>();
         placesAdapter = new PlacesAdapter(this, places);
         placesSpinner.setAdapter(placesAdapter);
         placesSpinner.setOnItemSelectedListener(placesSpinnerListener);
 
-        addPlaceButton = (Button)findViewById(R.id.add_place_button);
+        addPlaceButton = (Button) findViewById(R.id.add_place_button);
         addPlaceButton.setOnClickListener(addPlaceButtonListener);
 
-        clearPlacesButton = (Button)findViewById(R.id.clear_places_button);
+        clearPlacesButton = (Button) findViewById(R.id.clear_places_button);
         clearPlacesButton.setOnClickListener(clearPlacesButtonListener);
 
         googleApiClient = new GoogleApiClient.Builder(this)
@@ -174,12 +199,7 @@ public class GoogleMapsActivity extends AppCompatActivity implements GoogleApiCl
             googleApiClient.connect();
         }
         if (googleMap == null) {
-            ((MapFragment)getFragmentManager().findFragmentById(R.id.google_map)).getMapAsync(new OnMapReadyCallback() {
-                @Override
-                public void onMapReady(GoogleMap readyGoogleMap) {
-                    googleMap = readyGoogleMap;
-                }
-            });
+            ((MapFragment)getFragmentManager().findFragmentById(R.id.google_map)).getMapAsync(readyGoogleMap -> googleMap = readyGoogleMap);
         }
     }
 
@@ -210,7 +230,7 @@ public class GoogleMapsActivity extends AppCompatActivity implements GoogleApiCl
     }
 
     @Override
-    public void onConnectionFailed(ConnectionResult connectionResult) {
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
         Log.i(Constants.TAG, "onConnectionFailed() callback method has been invoked");
     }
 }

@@ -3,6 +3,7 @@ package ro.pub.cs.systems.eim.lab10.googlemapsgeofencing.view;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.location.Location;
+import android.support.annotation.NonNull;
 import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -26,7 +27,6 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
-import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 
@@ -60,7 +60,7 @@ public class GoogleMapsActivity extends AppCompatActivity  implements GoogleApiC
 
     private PendingIntent geofenceTrackerPendingIntent = null;
 
-    private GeofenceStatusButtonClickListener geofenceStatusButtonClickListener = new GeofenceStatusButtonClickListener();
+    private final GeofenceStatusButtonClickListener geofenceStatusButtonClickListener = new GeofenceStatusButtonClickListener();
     private class GeofenceStatusButtonClickListener implements Button.OnClickListener {
 
         @Override
@@ -123,9 +123,9 @@ public class GoogleMapsActivity extends AppCompatActivity  implements GoogleApiC
             Toast.makeText(getApplicationContext(), "Google API Client is null or not connected!", Toast.LENGTH_SHORT).show();
             return;
         }
-        latitudeEditText.setText(new String());
-        longitudeEditText.setText(new String());
-        radiusEditText.setText(new String());
+        latitudeEditText.setText("");
+        longitudeEditText.setText("");
+        radiusEditText.setText("");
         geofenceList.clear();
         LocationServices.GeofencingApi.removeGeofences(
                 googleApiClient,
@@ -135,9 +135,7 @@ public class GoogleMapsActivity extends AppCompatActivity  implements GoogleApiC
 
     private void navigateToLocation(double latitude, double longitude) {
         currentLocationTextView.setText(
-                "Latitude: " + latitude
-                + System.getProperty("line.separator")
-                + "Longitude: " + longitude
+                String.format("Latitude: %s%sLongitude: %s", latitude, System.getProperty("line.separator"), longitude)
         );
         CameraPosition cameraPosition = new CameraPosition.Builder()
                 .target(new LatLng(latitude, longitude))
@@ -191,12 +189,7 @@ public class GoogleMapsActivity extends AppCompatActivity  implements GoogleApiC
             googleApiClient.connect();
         }
         if (googleMap == null) {
-            ((MapFragment)getFragmentManager().findFragmentById(R.id.google_map)).getMapAsync(new OnMapReadyCallback() {
-                @Override
-                public void onMapReady(GoogleMap readyGoogleMap) {
-                    googleMap = readyGoogleMap;
-                }
-            });
+            ((MapFragment)getFragmentManager().findFragmentById(R.id.google_map)).getMapAsync(readyGoogleMap -> googleMap = readyGoogleMap);
         }
         if (googleApiClient != null && googleApiClient.isConnected()) {
             startLocationUpdates();
@@ -251,7 +244,7 @@ public class GoogleMapsActivity extends AppCompatActivity  implements GoogleApiC
             lastLocation = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
             startLocationUpdates();
             if (geofenceStatus) {
-                geofenceStatus = !geofenceStatus;
+                geofenceStatus = false;
                 addGeofence(
                         latitudeEditText.getText().toString(),
                         longitudeEditText.getText().toString(),
@@ -272,7 +265,7 @@ public class GoogleMapsActivity extends AppCompatActivity  implements GoogleApiC
     }
 
     @Override
-    public void onConnectionFailed(ConnectionResult connectionResult) {
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
         Log.i(Constants.TAG, "onConnectionFailed() callback method has been invoked");
     }
 
@@ -331,7 +324,7 @@ public class GoogleMapsActivity extends AppCompatActivity  implements GoogleApiC
             }
 
         } else {
-            String errorMessage = null;
+            String errorMessage;
             switch(status.getStatusCode()) {
                 case GeofenceStatusCodes.GEOFENCE_NOT_AVAILABLE:
                     errorMessage = Constants.GEOFENCE_NOT_AVAILABLE_ERROR;
