@@ -12,8 +12,6 @@ public class Utilities {
                 return BitmapDescriptorFactory.HUE_VIOLET;
             case Constants.ORANGE_POSITION:
                 return BitmapDescriptorFactory.HUE_ORANGE;
-            case Constants.RED_POSITION:
-                return BitmapDescriptorFactory.HUE_RED;
             case Constants.BLUE_POSITION:
                 return BitmapDescriptorFactory.HUE_BLUE;
             case Constants.GREEN_POSITION:

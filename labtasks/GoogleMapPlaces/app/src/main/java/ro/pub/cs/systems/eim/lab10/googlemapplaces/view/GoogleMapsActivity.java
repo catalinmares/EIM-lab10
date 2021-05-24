@@ -52,6 +52,7 @@ public class GoogleMapsActivity extends AppCompatActivity implements GoogleApiCl
     private Button clearPlacesButton = null;
 
     private void navigateToLocation(double latitude, double longitude) {
+        Log.d(Constants.TAG, "navigateToLocation() - navigating to (" + latitude + ", " + longitude + ")");
         latitudeEditText.setText(String.valueOf(latitude));
         longitudeEditText.setText(String.valueOf(longitude));
         CameraPosition cameraPosition = new CameraPosition.Builder()
@@ -199,7 +200,10 @@ public class GoogleMapsActivity extends AppCompatActivity implements GoogleApiCl
             googleApiClient.connect();
         }
         if (googleMap == null) {
-            ((MapFragment)getFragmentManager().findFragmentById(R.id.google_map)).getMapAsync(readyGoogleMap -> googleMap = readyGoogleMap);
+            ((MapFragment)getFragmentManager().findFragmentById(R.id.google_map)).getMapAsync(readyGoogleMap -> {
+                googleMap = readyGoogleMap;
+                Log.d(Constants.TAG, "Google Map is ready");
+            });
         }
     }
 

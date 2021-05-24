@@ -31,11 +31,14 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 
+import java.security.acl.Permission;
+
 import ro.pub.cs.systems.eim.lab10.R;
 import ro.pub.cs.systems.eim.lab10.googlemapslocationupdate.general.Constants;
 
 public class GoogleMapsActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
-
+    private static final int REQUEST_PERMISSIONS_START_CODE = 100;
+    private static final int REQUEST_PERMISSIONS_STOP_CODE = 101;
     private GoogleMap googleMap = null;
     private GoogleApiClient googleApiClient = null;
 
@@ -270,45 +273,47 @@ public class GoogleMapsActivity extends AppCompatActivity implements GoogleApiCl
     }
 
     private void startLocationUpdates() {
-        try {
-            LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, locationRequest, this);
-
-            locationUpdatesStatus = true;
-            googleMap.setMyLocationEnabled(true);
-
-            locationUpdatesStatusButton.setText(getResources().getString(R.string.stop_location_updates));
-            locationUpdatesStatusButton.setBackground(ResourcesCompat.getDrawable(getResources(), R.color.colorRed, null));
-
-            if (lastLocation != null) {
-                navigateToLocation(lastLocation);
-            }
-
-            latitudeEditText.setEnabled(false);
-            longitudeEditText.setEnabled(false);
-            navigateToLocationButton.setEnabled(false);
-        } catch (SecurityException e) {
-            Log.e(Constants.TAG, "startLocationUpdates(): " + e.getMessage());
-            e.printStackTrace();
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_PERMISSIONS_START_CODE);
+            return;
         }
+
+        LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, locationRequest, this);
+
+        locationUpdatesStatus = true;
+        googleMap.setMyLocationEnabled(true);
+
+        locationUpdatesStatusButton.setText(getResources().getString(R.string.stop_location_updates));
+        locationUpdatesStatusButton.setBackground(ResourcesCompat.getDrawable(getResources(), R.color.colorRed, null));
+
+        if (lastLocation != null) {
+            navigateToLocation(lastLocation);
+        }
+
+        latitudeEditText.setEnabled(false);
+        longitudeEditText.setEnabled(false);
+        navigateToLocationButton.setEnabled(false);
     }
 
     private void stopLocationUpdates() {
-        try {
-            LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, this);
-
-            locationUpdatesStatus = false;
-            googleMap.setMyLocationEnabled(false);
-
-            locationUpdatesStatusButton.setText(getResources().getString(R.string.start_location_updates));
-            locationUpdatesStatusButton.setBackground(ResourcesCompat.getDrawable(getResources(), R.color.colorGreen, null));
-
-            latitudeEditText.setEnabled(true);
-            longitudeEditText.setEnabled(true);
-            navigateToLocationButton.setEnabled(true);
-        } catch (SecurityException e) {
-            Log.e(Constants.TAG, "stopLocationUpdates(): " + e.getMessage());
-            e.printStackTrace();
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_PERMISSIONS_STOP_CODE);
+            return;
         }
+
+        LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, this);
+
+        locationUpdatesStatus = false;
+        googleMap.setMyLocationEnabled(false);
+
+        locationUpdatesStatusButton.setText(getResources().getString(R.string.start_location_updates));
+        locationUpdatesStatusButton.setBackground(ResourcesCompat.getDrawable(getResources(), R.color.colorGreen, null));
+
+        latitudeEditText.setEnabled(true);
+        longitudeEditText.setEnabled(true);
+        navigateToLocationButton.setEnabled(true);
     }
 
     @Override
@@ -316,5 +321,20 @@ public class GoogleMapsActivity extends AppCompatActivity implements GoogleApiCl
         Log.i(Constants.TAG, "onLocationChanged() callback method has been invoked");
         lastLocation = location;
         navigateToLocation(lastLocation);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == REQUEST_PERMISSIONS_START_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                startLocationUpdates();
+            }
+        } else if (requestCode == REQUEST_PERMISSIONS_STOP_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                stopLocationUpdates();
+            }
+        }
     }
 }
